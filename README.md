@@ -1,3 +1,20 @@
+# Rocket Shopizer
+
+This is a fork of Shopizer for Rocket Insights mad experiments!
+
+First things first, please make sure you are using the `2.7.0` branch to get going quickest, it's the most stable (as of this commit). It's been set as the default branch in this forked repo so hopefully you're already on it!
+
+This is a huge repo with lots of maven modules. To get you going, here's some helpful hints:
+
+* The build instructions are actually pretty good.  Follow 'em!
+* `sm-shop` is the main web application and where you're going to be running out of.  The docs help you get going, but thought we'd call it out. It's a good starting point to go from.
+* Once you have the app up and running locally, you can see swagger API docs at: [http://localhost:8080/swagger-ui.html#/](http://localhost:8080/swagger-ui.html#/)
+* In addition to the store itself that the build guide links you to, we think using the admin interface at [http://localhost:8080/admin/](http://localhost:8080/admin/) is a good way to start understanding the data model. Login using username `admin` and password `password`.  The docs that shopizer has for the admin credentials are *wrong*.
+* It's tough to get new test data into this app, so for ad hoc testing, we recommend simply going to the admin interface and adding it that way 
+  * TODO once this is figured out, add a script to add some better test data
+* Good luck!
+
+
 Shopizer (for java 1.8 +)
 -------------------
 [![last_version](https://img.shields.io/badge/last_version-v2.7.0-blue.svg?style=flat)](https://github.com/shopizer-ecommerce/shopizer/tree/2..6.0)
