@@ -369,7 +369,7 @@ public class ProductApi {
     productsList.setProducts(products.stream().filter(product -> product.isDiscounted()).filter(product -> {
       String finalPrice = product.getFinalPrice().replaceAll("\\$","");
       String originalPrice = product.getOriginalPrice().replaceAll("\\$","");
-      if( Math.abs( Math.ceil(( (Float.parseFloat(finalPrice)/Float.parseFloat(originalPrice)) * 100) ) - 100) > 20 ) {
+      if( Math.abs( Math.ceil(( (Float.parseFloat(finalPrice)/Float.parseFloat(originalPrice)) * 100) ) - 100) >= 20  ) {
         return true;
       }
       return false;
