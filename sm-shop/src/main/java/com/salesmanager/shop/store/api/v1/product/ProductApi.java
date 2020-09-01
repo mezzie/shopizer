@@ -3,6 +3,7 @@ package com.salesmanager.shop.store.api.v1.product;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -346,6 +347,36 @@ public class ProductApi {
 
   	return this.getProducts(0, 10000, store, lang, null, null, request, response);
   }*/
+  @RequestMapping(value = "/products/recommended")
+  @ResponseBody
+  @ApiImplicitParams({
+          @ApiImplicitParam(name = "store", dataType = "String", defaultValue = "DEFAULT"),
+          @ApiImplicitParam(name = "lang", dataType = "String", defaultValue = "en")
+  })
+  public ReadableProductList getRecommendedFiltered(@RequestParam(value = "lang", required = false) String lang,
+                                                    @RequestParam(value = "category", required = false) Long category,
+                                                    @RequestParam(value = "manufacturer", required = false) Long manufacturer,
+                                                    @RequestParam(value = "status", required = false) String status,
+                                                    @RequestParam(value = "owner", required = false) Long owner,
+                                                    @RequestParam(value = "start", required = false) Integer start,
+                                                    @RequestParam(value = "count", required = false) Integer count,
+                                                    @ApiIgnore MerchantStore merchantStore,
+                                                    @ApiIgnore Language language,
+                                                    HttpServletRequest request,
+                                                    HttpServletResponse response) throws Exception {
+    ReadableProductList productsList = getFiltered(lang, category, manufacturer, status, owner, start, count, merchantStore, language, request, response);
+    List<ReadableProduct> products = productsList.getProducts();
+    productsList.setProducts(products.stream().filter(product -> product.isDiscounted()).filter(product -> {
+      String finalPrice = product.getFinalPrice().replaceAll("\\$","");
+      String originalPrice = product.getOriginalPrice().replaceAll("\\$","");
+      if( Math.abs( Math.ceil(( (Float.parseFloat(finalPrice)/Float.parseFloat(originalPrice)) * 100) ) - 100) > 20 ) {
+        return true;
+      }
+      return false;
+    }).collect(Collectors.toList()));
+    productsList.setTotalCount(productsList.getProducts().size());
+    return productsList;
+  }
 
   /**
    * Filtering product lists based on product attributes ?category=1 &manufacturer=2 &type=...
