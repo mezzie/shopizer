@@ -345,35 +345,61 @@ public class ProductApi {
 
 
 
+
   	return this.getProducts(0, 10000, store, lang, null, null, request, response);
   }*/
+
+  /***
+   * Returns all the products with discount. Defaults to 20 if not given provided in the URL.
+   */
+  private static final int DEFAULT_DISCOUNT = 20;
   @RequestMapping(value = "/products/recommended")
   @ResponseBody
   @ApiImplicitParams({
           @ApiImplicitParam(name = "store", dataType = "String", defaultValue = "DEFAULT"),
-          @ApiImplicitParam(name = "lang", dataType = "String", defaultValue = "en")
+          @ApiImplicitParam(name = "lang", dataType = "String", defaultValue = "en"),
+          @ApiImplicitParam(name = "discount", dataType = "String", defaultValue = "20")
   })
-  public ReadableProductList getRecommendedFiltered(@RequestParam(value = "lang", required = false) String lang,
-                                                    @RequestParam(value = "category", required = false) Long category,
-                                                    @RequestParam(value = "manufacturer", required = false) Long manufacturer,
-                                                    @RequestParam(value = "status", required = false) String status,
-                                                    @RequestParam(value = "owner", required = false) Long owner,
-                                                    @RequestParam(value = "start", required = false) Integer start,
-                                                    @RequestParam(value = "count", required = false) Integer count,
-                                                    @ApiIgnore MerchantStore merchantStore,
-                                                    @ApiIgnore Language language,
-                                                    HttpServletRequest request,
-                                                    HttpServletResponse response) throws Exception {
+  public ReadableProductList getRecommendedFiltered(
+      @RequestParam(value = "discount", required = false) String discount,
+      @RequestParam(value = "lang", required = false) String lang,
+      @RequestParam(value = "category", required = false) Long category,
+      @RequestParam(value = "manufacturer", required = false) Long manufacturer,
+      @RequestParam(value = "status", required = false) String status,
+      @RequestParam(value = "owner", required = false) Long owner,
+      @RequestParam(value = "start", required = false) Integer start,
+      @RequestParam(value = "count", required = false) Integer count,
+      @ApiIgnore MerchantStore merchantStore,
+      @ApiIgnore Language language,
+      HttpServletRequest request,
+      HttpServletResponse response) throws Exception {
+    // get the products first
     ReadableProductList productsList = getFiltered(lang, category, manufacturer, status, owner, start, count, merchantStore, language, request, response);
+
     List<ReadableProduct> products = productsList.getProducts();
+    // default to DEFAULT_DISCOUNT in case the user enters a wrong value in the discount
+    int disc = DEFAULT_DISCOUNT;
+    if(discount != null) {
+      try {
+        disc = Integer.parseInt(discount);
+      } catch (NumberFormatException e) {
+        LOGGER.error("There was an error with the discount parameter, defaulting to 20%", e);
+      }
+    }
+    // copy value so we can use it in lambda
+    int finalDisc = disc;
     productsList.setProducts(products.stream().filter(product -> product.isDiscounted()).filter(product -> {
+
+      // remove the $ and convert to just string numbers
       String finalPrice = product.getFinalPrice().replaceAll("\\$","");
       String originalPrice = product.getOriginalPrice().replaceAll("\\$","");
-      if( Math.abs( Math.ceil(( (Float.parseFloat(finalPrice)/Float.parseFloat(originalPrice)) * 100) ) - 100) >= 20  ) {
+      // calculate the percentage
+      if( Math.abs( Math.ceil(( (Float.parseFloat(finalPrice)/Float.parseFloat(originalPrice)) * 100) ) - 100) >= finalDisc) {
         return true;
       }
       return false;
     }).collect(Collectors.toList()));
+    // update count
     productsList.setTotalCount(productsList.getProducts().size());
     return productsList;
   }
